@@ -1,0 +1,138 @@
+name: Release Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - rc
+      - beta
+      - alpha
+    tags:
+      - "v*.*.*" # Final releases
+      - "v*.*.*-*" # Pre-release tags (alpha, beta, rc, etc.)
+
+jobs:
+  semantic-release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.get_tag.outputs.tag }}
+      release_upload_url: ${{ steps.get_release.outputs.release_upload_url }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0 # Full history is required for proper commit analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Create minimal package.json for semantic-release
+        run: |
+          if [ ! -f package.json ]; then
+            echo '{}' > package.json
+          fi
+
+      - name: Install semantic-release and plugins
+        run: |
+          npm install semantic-release \
+            @semantic-release/commit-analyzer \
+            @semantic-release/release-notes-generator \
+            @semantic-release/changelog \
+            @semantic-release/npm \
+            @semantic-release/github \
+            @semantic-release/git
+
+      - name: Run semantic-release
+        id: semantic
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx semantic-release || echo "No release created"
+
+      - name: Get release tag
+        id: get_tag
+        run: |
+          # Use the tag from GITHUB_REF (if present) or extract from semantic-release output
+          tag=${GITHUB_REF##*/}
+          echo "Using tag: $tag"
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
+      - name: Get release upload URL
+        id: get_release
+        run: |
+          tag=${GITHUB_REF##*/}
+          echo "Retrieving release for tag: $tag"
+          # Retrieve the release's upload URL without stripping the placeholder
+          url=$(gh release view "$tag" --json uploadUrl --jq .uploadUrl)
+          echo "Upload URL: $url"
+          echo "release_upload_url=${url}" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  build-and-release:
+    name: Build and Release CLI
+    needs: semantic-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24.0"
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build CLI binary
+        working-directory: cmd/sail
+        run: |
+          mkdir -p dist
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+          go build -ldflags "-X 'github.com/SailfinIO/sail/cmd/sail/version.Version=${{ needs.semantic-release.outputs.release_tag }}'" \
+          -o dist/sail-${{ matrix.goos }}-${{ matrix.goarch }} .
+
+      - name: Package CLI binary (Linux/macOS)
+        if: matrix.goos != 'windows'
+        run: |
+          tar -czf sail-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C cmd/sail/dist sail-${{ matrix.goos }}-${{ matrix.goarch }}
+
+      - name: Package CLI binary (Windows)
+        if: matrix.goos == 'windows'
+        run: |
+          zip -j sail-${{ matrix.goos }}-${{ matrix.goarch }}.zip cmd/sail/dist/sail-${{ matrix.goos }}-${{ matrix.goarch }}
+
+      - name: List files
+        run: ls -l
+
+      - name: Upload CLI Binary (Linux/macOS)
+        if: matrix.goos != 'windows'
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ needs.semantic-release.outputs.release_upload_url }}
+          asset_path: sail-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          asset_name: sail-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          asset_content_type: application/octet-stream
+
+      - name: Upload CLI Binary (Windows)
+        if: matrix.goos == 'windows'
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ needs.semantic-release.outputs.release_upload_url }}
+          asset_path: sail-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+          asset_name: sail-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+          asset_content_type: application/octet-stream
