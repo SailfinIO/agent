@@ -23,7 +23,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "agent",
+		Use:   "sailfin",
 		Short: "Sailfin agent collects server metrics",
 	}
 

@@ -95,22 +95,22 @@ jobs:
         run: go test ./...
 
       - name: Build CLI binary
-        working-directory: cmd/sail
+        working-directory: cmd/agent
         run: |
           mkdir -p dist
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-          go build -ldflags "-X 'github.com/SailfinIO/sail/cmd/sail/version.Version=${{ needs.semantic-release.outputs.release_tag }}'" \
-          -o dist/sail-${{ matrix.goos }}-${{ matrix.goarch }} .
+          go build -ldflags "-X 'github.com/SailfinIO/agent/cmd/version.Version=${{ needs.semantic-release.outputs.release_tag }}'" \
+          -o dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }} .
 
       - name: Package CLI binary (Linux/macOS)
         if: matrix.goos != 'windows'
         run: |
-          tar -czf sail-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C cmd/sail/dist sail-${{ matrix.goos }}-${{ matrix.goarch }}
+          tar -czf sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C cmd/agent/dist sailfin-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Package CLI binary (Windows)
         if: matrix.goos == 'windows'
         run: |
-          zip -j sail-${{ matrix.goos }}-${{ matrix.goarch }}.zip cmd/sail/dist/sail-${{ matrix.goos }}-${{ matrix.goarch }}
+          zip -j sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.zip cmd/agent/dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: List files
         run: ls -l
@@ -122,8 +122,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ needs.semantic-release.outputs.release_upload_url }}
-          asset_path: sail-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
-          asset_name: sail-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          asset_path: agent-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          asset_name: agent-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
           asset_content_type: application/octet-stream
 
       - name: Upload CLI Binary (Windows)
@@ -133,6 +133,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ needs.semantic-release.outputs.release_upload_url }}
-          asset_path: sail-${{ matrix.goos }}-${{ matrix.goarch }}.zip
-          asset_name: sail-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+          asset_path: agent-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+          asset_name: agent-${{ matrix.goos }}-${{ matrix.goarch }}.zip
           asset_content_type: application/octet-stream
