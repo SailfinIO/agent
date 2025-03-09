@@ -71,6 +71,10 @@ jobs:
       - name: Get release upload URL
         id: get_release
         run: |
+          if [[ "$GITHUB_REF" != refs/tags/* ]]; then
+            echo "Not a tag ref. Skipping release upload URL retrieval."
+            exit 0
+          fi
           tag=${GITHUB_REF##*/}
           echo "Retrieving release for tag: $tag"
           # Retrieve the release's upload URL without stripping the placeholder
