@@ -1,0 +1,16 @@
+# .goreleaser.yml
+project_name: sail
+builds:
+  - main: ./cmd/sail/cli
+    ldflags: >
+      -X 'github.com/SailfinIO/sail/cmd/sail/version.Version={{.Version}}'
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+release:
+  prerelease: "{{ semver.Prerelease }}"
+  github:
+    owner: SailfinIO
+    name: sail
