@@ -55,9 +55,17 @@ jobs:
       - name: Get release tag
         id: get_tag
         run: |
-          # Use the tag from GITHUB_REF (if present) or extract from semantic-release output
-          tag=${GITHUB_REF##*/}
-          echo "Using tag: $tag"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag=${GITHUB_REF##*/}
+            echo "Using tag from GITHUB_REF: $tag"
+          else
+            echo "Not a tag ref. Skipping tag extraction."
+            # Option 1: Use semantic-release output if available (adjust as needed)
+            tag=${{ steps.semantic.outputs.nextRelease.version }}
+            echo "Using semantic-release output: $tag"
+            # Option 2: Alternatively, exit or set a default value:
+            # tag="no-tag"
+          fi
           echo "tag=$tag" >> $GITHUB_OUTPUT
 
       - name: Get release upload URL
