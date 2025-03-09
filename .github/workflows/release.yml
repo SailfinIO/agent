@@ -105,12 +105,9 @@ jobs:
       - name: Package CLI binary (Linux/macOS)
         if: matrix.goos != 'windows'
         run: |
-          tar -czf sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C cmd/agent/dist sailfin-${{ matrix.goos }}-${{ matrix.goarch }}
-
-      - name: Package CLI binary (Windows)
-        if: matrix.goos == 'windows'
-        run: |
-          zip -j sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.zip cmd/agent/dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }}
+          mkdir -p package/bin
+          cp cmd/agent/dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }} package/bin/sailfin
+          tar -czf sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C package .
 
       - name: List files
         run: ls -l
@@ -124,15 +121,4 @@ jobs:
           upload_url: ${{ needs.semantic-release.outputs.release_upload_url }}
           asset_path: sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
           asset_name: sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
-          asset_content_type: application/octet-stream
-
-      - name: Upload CLI Binary (Windows)
-        if: matrix.goos == 'windows'
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ needs.semantic-release.outputs.release_upload_url }}
-          asset_path: sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.zip
-          asset_name: sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.zip
           asset_content_type: application/octet-stream
