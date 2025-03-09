@@ -3,7 +3,6 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/SailfinIO/agent/pkg/config"
 	"github.com/SailfinIO/agent/pkg/server"
 	"github.com/SailfinIO/agent/pkg/storage"
+	"github.com/SailfinIO/agent/pkg/utils"
 )
 
 // Collector defines the interface for metric collectors.
@@ -19,12 +19,13 @@ type Collector interface {
 	Collect() (interface{}, error)
 }
 
-// Agent ties together configuration, collectors, the HTTP server, and storage.
+// Agent ties together configuration, collectors, the HTTP server, storage, and logging.
 type Agent struct {
 	cfg        *config.Config
 	httpServer *server.HTTPServer
 	collectors []Collector
 	storage    storage.Storage
+	logger     utils.Logger
 }
 
 // NewAgent creates a new Agent instance.
@@ -38,16 +39,17 @@ func NewAgent(cfg *config.Config) (*Agent, error) {
 
 	// Create an HTTP mux that will serve the /metrics endpoint.
 	mux := http.NewServeMux()
-	agent := &Agent{
+	a := &Agent{
 		cfg:        cfg,
 		collectors: collectors,
 		storage:    storage.NewInMemoryStorage(),
+		logger:     utils.New().WithContext("agent"),
 	}
-	mux.HandleFunc("/metrics", agent.handleMetrics)
+	mux.HandleFunc("/metrics", a.handleMetrics)
 
 	srv := server.NewHTTPServer(cfg.ServerAddress, mux)
-	agent.httpServer = srv
-	return agent, nil
+	a.httpServer = srv
+	return a, nil
 }
 
 // Start runs the agent, including periodic metric collection and the HTTP server.
@@ -57,16 +59,16 @@ func (a *Agent) Start() error {
 		for {
 			metrics, err := aggregateMetrics(a.collectors)
 			if err != nil {
-				log.Printf("Error collecting metrics: %v", err)
+				a.logger.Error(fmt.Sprintf("Error collecting metrics: %v", err))
 			} else {
 				snapshot := storage.Snapshot{
 					Timestamp: time.Now(),
 					Metrics:   metrics,
 				}
 				if err := a.storage.Save(snapshot); err != nil {
-					log.Printf("Error saving snapshot: %v", err)
+					a.logger.Error(fmt.Sprintf("Error saving snapshot: %v", err))
 				} else {
-					log.Printf("Saved snapshot at %v", snapshot.Timestamp)
+					a.logger.Info(fmt.Sprintf("Saved snapshot at %v", snapshot.Timestamp))
 				}
 			}
 			time.Sleep(30 * time.Second)

@@ -2,23 +2,28 @@ package cli
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/SailfinIO/agent/pkg/agent"
 	"github.com/SailfinIO/agent/pkg/config"
+	"github.com/SailfinIO/agent/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
 // NewRootCmd creates the root command for the agent CLI.
 func NewRootCmd() *cobra.Command {
+	// Create a logger instance for the CLI.
+	logger := utils.New().WithContext("cli")
+
 	// Load configuration.
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		logger.Error("Failed to load config: " + err.Error())
+		os.Exit(1)
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "agent",
+		Use:   "sailfin",
 		Short: "Sailfin agent collects server metrics",
 	}
 
@@ -29,10 +34,13 @@ func NewRootCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			a, err := agent.NewAgent(cfg)
 			if err != nil {
-				log.Fatalf("Error initializing agent: %v", err)
+				logger.Error("Error initializing agent: " + err.Error())
+				os.Exit(1)
 			}
+			logger.Info("Starting agent service")
 			if err := a.Start(); err != nil {
-				log.Fatalf("Error running agent: %v", err)
+				logger.Error("Error running agent: " + err.Error())
+				os.Exit(1)
 			}
 		},
 	}
@@ -44,13 +52,15 @@ func NewRootCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			a, err := agent.NewAgent(cfg)
 			if err != nil {
-				log.Fatalf("Error initializing agent: %v", err)
+				logger.Error("Error initializing agent: " + err.Error())
+				os.Exit(1)
 			}
 			m, err := a.CollectMetrics()
 			if err != nil {
-				log.Fatalf("Error collecting metrics: %v", err)
+				logger.Error("Error collecting metrics: " + err.Error())
+				os.Exit(1)
 			}
-			fmt.Printf("Metrics: %+v\n", m)
+			logger.Info(fmt.Sprintf("Metrics: %+v", m))
 		},
 	}
 

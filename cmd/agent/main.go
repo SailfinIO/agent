@@ -1,21 +1,26 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/SailfinIO/agent/pkg/agent"
 	"github.com/SailfinIO/agent/pkg/config"
+	"github.com/SailfinIO/agent/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
 func main() {
+	// Create a global logger with context "main".
+	logger := utils.New().WithContext("main")
+
 	// Load configuration.
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
+		logger.Error("Error loading configuration: " + err.Error())
+		os.Exit(1)
 	}
 
 	rootCmd := &cobra.Command{
@@ -30,10 +35,13 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			a, err := agent.NewAgent(cfg)
 			if err != nil {
-				log.Fatalf("Error initializing agent: %v", err)
+				logger.Error("Error initializing agent: " + err.Error())
+				os.Exit(1)
 			}
+			logger.Info("Starting agent service")
 			if err := a.Start(); err != nil {
-				log.Fatalf("Error starting agent: %v", err)
+				logger.Error("Error starting agent: " + err.Error())
+				os.Exit(1)
 			}
 		},
 	}
@@ -45,7 +53,8 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			a, err := agent.NewAgent(cfg)
 			if err != nil {
-				log.Fatalf("Error initializing agent: %v", err)
+				logger.Error("Error initializing agent: " + err.Error())
+				os.Exit(1)
 			}
 
 			limit, _ := cmd.Flags().GetInt("limit")
@@ -57,15 +66,17 @@ func main() {
 				fromUnix, err1 := strconv.ParseInt(fromStr, 10, 64)
 				toUnix, err2 := strconv.ParseInt(toStr, 10, 64)
 				if err1 != nil || err2 != nil {
-					log.Fatalf("Invalid from/to timestamps provided")
+					logger.Error("Invalid from/to timestamps provided")
+					os.Exit(1)
 				}
 				from := time.Unix(fromUnix, 0)
 				to := time.Unix(toUnix, 0)
 				snaps, err := a.GetSnapshotsByTime(from, to)
 				if err != nil {
-					log.Fatalf("Error retrieving snapshots: %v", err)
+					logger.Error("Error retrieving snapshots: " + err.Error())
+					os.Exit(1)
 				}
-				log.Printf("Snapshots (from %v to %v): %+v", from, to, snaps)
+				logger.Info(fmt.Sprintf("Snapshots (from %v to %v): %+v", from, to, snaps))
 				return
 			}
 
@@ -73,18 +84,20 @@ func main() {
 			if limit > 0 {
 				snaps, err := a.GetSnapshotsByLimit(limit)
 				if err != nil {
-					log.Fatalf("Error retrieving snapshots: %v", err)
+					logger.Error("Error retrieving snapshots: " + err.Error())
+					os.Exit(1)
 				}
-				log.Printf("Latest %d snapshots: %+v", limit, snaps)
+				logger.Info(fmt.Sprintf("Latest %d snapshots: %+v", limit, snaps))
 				return
 			}
 
 			// Default: return the latest snapshot.
 			snap, err := a.GetLatestSnapshot()
 			if err != nil {
-				log.Fatalf("Error retrieving the latest snapshot: %v", err)
+				logger.Error("Error retrieving the latest snapshot: " + err.Error())
+				os.Exit(1)
 			}
-			log.Printf("Latest Snapshot: %+v", snap)
+			logger.Info(fmt.Sprintf("Latest Snapshot: %+v", snap))
 		},
 	}
 
@@ -96,6 +109,7 @@ func main() {
 	rootCmd.AddCommand(runCmd, metricsCmd)
 
 	if err := rootCmd.Execute(); err != nil {
+		logger.Error("Error executing command: " + err.Error())
 		os.Exit(1)
 	}
 }
