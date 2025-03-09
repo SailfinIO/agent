@@ -1,3 +1,5 @@
+// cmd/version/version.go
+
 package version
 
 // Version holds the current version of the agent.
