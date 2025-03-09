@@ -1,9 +1,9 @@
 # .goreleaser.yml
 project_name: sail
 builds:
-  - main: ./cmd/sail/cli
+  - main: ./cli/commands
     ldflags: >
-      -X 'github.com/SailfinIO/sail/cmd/sail/version.Version={{.Version}}'
+      -X 'github.com/SailfinIO/sail/pkg/agent/version.Version={{.Version}}'
 archives:
   - format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"

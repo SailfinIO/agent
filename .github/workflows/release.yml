@@ -55,14 +55,26 @@ jobs:
       - name: Get release tag
         id: get_tag
         run: |
-          # Use the tag from GITHUB_REF (if present) or extract from semantic-release output
-          tag=${GITHUB_REF##*/}
-          echo "Using tag: $tag"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag=${GITHUB_REF##*/}
+            echo "Using tag from GITHUB_REF: $tag"
+          else
+            echo "Not a tag ref. Skipping tag extraction."
+            # Option 1: Use semantic-release output if available (adjust as needed)
+            tag=${{ steps.semantic.outputs.nextRelease.version }}
+            echo "Using semantic-release output: $tag"
+            # Option 2: Alternatively, exit or set a default value:
+            # tag="no-tag"
+          fi
           echo "tag=$tag" >> $GITHUB_OUTPUT
 
       - name: Get release upload URL
         id: get_release
         run: |
+          if [[ "$GITHUB_REF" != refs/tags/* ]]; then
+            echo "Not a tag ref. Skipping release upload URL retrieval."
+            exit 0
+          fi
           tag=${GITHUB_REF##*/}
           echo "Retrieving release for tag: $tag"
           # Retrieve the release's upload URL without stripping the placeholder
@@ -78,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [linux, darwin, windows]
+        goos: [linux, darwin]
         goarch: [amd64]
     steps:
       - name: Checkout code
@@ -113,7 +125,7 @@ jobs:
         run: ls -l
 
       - name: Upload CLI Binary (Linux/macOS)
-        if: matrix.goos != 'windows'
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
