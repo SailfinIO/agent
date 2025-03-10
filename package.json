@@ -1,6 +1,6 @@
 {
   "name": "agent",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha.4",
   "description": "Sailfin agent release handler",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "url": "https://github.com/SailfinIO/agent/issues"
   },
   "homepage": "https://github.com/SailfinIO/agent#readme",
-  "private": true,
+  "private": false,
   "scripts": {
     "release": "semantic-release"
   },
