@@ -41,8 +41,7 @@ else
 fi
 
 # Update pkg/version/version.go in place.
-# Note: Adjust the sed command if the file formatting changes.
-sed -i "s/var Version = \"dev\"/var Version = \"$NEW_VERSION\"/" pkg/version/version.go
+sed -i "s/var Version = \".*\"/var Version = \"$NEW_VERSION\"/" pkg/version/version.go
 
 # Stage the change.
 git add pkg/version/version.go
