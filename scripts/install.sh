@@ -47,9 +47,15 @@ if [ -z "${VERSION:-}" ] || [ "$VERSION" = "latest" ]; then
   fi
   log "Latest release version found: ${VERSION}"
 fi
+
+# Define asset and URL based on OS, architecture, and version
+ASSET="sailfin-${OS}-${ARCH}.tar.gz"
+URL="https://github.com/SailfinIO/agent/releases/download/v${VERSION}/${ASSET}"
+
 log "Detected OS: ${OS}"
 log "Detected architecture: ${ARCH}"
 log "Downloading asset: ${ASSET} (version ${VERSION}) from ${URL}"
+
 
 # --- Download the Asset ---
 curl -LO "$URL"
