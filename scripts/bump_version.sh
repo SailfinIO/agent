@@ -30,26 +30,35 @@ fi
 echo "New version: $NEW_VERSION"
 echo "Branch to update: $BRANCH"
 
-# Ensure the latest remote branches are fetched.
+# Fetch remote branches to ensure we have the latest.
 git fetch origin
 
-# Check if the branch exists locally. If not, create it from the remote.
+# Checkout the branch; if it doesn't exist locally, create it from origin.
 if git rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
   git checkout "$BRANCH"
 else
   git checkout -B "$BRANCH" "origin/$BRANCH"
 fi
 
-# Update version.go in place without creating a backup.
+# Update pkg/version/version.go in place.
+# Note: Adjust the sed command if the file formatting changes.
 sed -i "s/var Version = \"dev\"/var Version = \"$NEW_VERSION\"/" pkg/version/version.go
+
+# Stage the change.
+git add pkg/version/version.go
+
+# Check if there are any staged changes.
+if git diff --cached --quiet; then
+  echo "No changes to commit in pkg/version/version.go."
+  exit 0
+fi
 
 # Configure Git for committing.
 git config user.email "release-bot@sailfin.io"
 git config user.name "Release Bot"
 
-# Stage the change and commit.
-git add pkg/version/version.go
+# Commit the change.
 git commit -m "Bump version to $NEW_VERSION [skip ci]"
 
-# Push the commit to the target branch.
+# Push the commit.
 git push origin "$BRANCH"
