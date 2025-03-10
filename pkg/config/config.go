@@ -17,9 +17,9 @@ type Config struct {
 
 // LoadConfig reads configuration from file/environment variables.
 func LoadConfig() (*Config, error) {
-	viper.SetConfigName("config") // Name of config file (without extension)
-	viper.SetConfigType("yaml")   // Config file format
-	viper.AddConfigPath(".")      // Look in the current directory
+	viper.SetConfigName("sailfin") // Name of config file (without extension)
+	viper.SetConfigType("yaml")    // Config file format
+	viper.AddConfigPath(".")       // Look in the current directory
 
 	// Set defaults
 	viper.SetDefault("server_address", "localhost:8080")
