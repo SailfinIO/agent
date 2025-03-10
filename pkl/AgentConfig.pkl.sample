@@ -7,15 +7,5 @@ remoteHosts = [
   {
     host: "localhost",
     user: "your_username"
-  },
-  {
-    host: "192.168.1.100",
-    user: "admin",
-    password: "secret"
-  },
-  {
-    host: "192.168.1.101",
-    user: "ubuntu",
-    privateKey: "/path/to/key.pem"
   }
 ]
