@@ -1,6 +1,6 @@
 {
-  "name": "agent",
-  "version": "0.0.1-alpha.4",
+  "name": "@sailfin/agent",
+  "version": "0.0.1",
   "description": "Sailfin agent release handler",
   "repository": {
     "type": "git",
