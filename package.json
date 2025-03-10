@@ -12,7 +12,7 @@
     "url": "https://github.com/SailfinIO/agent/issues"
   },
   "homepage": "https://github.com/SailfinIO/agent#readme",
-  "private": false,
+  "private": true,
   "scripts": {
     "release": "semantic-release"
   },

@@ -72,5 +72,6 @@
       }
     ]
   ],
-  "preset": "conventionalcommits"
+  "preset": "conventionalcommits",
+  "npmPublish": false
 }

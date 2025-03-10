@@ -33,7 +33,7 @@ jobs:
       - name: Create minimal package.json for semantic-release
         run: |
           if [ ! -f package.json ]; then
-            echo '{}' > package.json
+            echo '{"private": true}' > package.json
           fi
 
       - name: Install semantic-release and plugins
