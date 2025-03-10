@@ -8,11 +8,19 @@ import (
 	"github.com/spf13/viper"
 )
 
+// RemoteHost holds the configuration for a remote host.
+type RemoteHost struct {
+	Host       string `mapstructure:"host"`
+	User       string `mapstructure:"user"`
+	Password   string `mapstructure:"password,omitempty"`
+	PrivateKey string `mapstructure:"private_key,omitempty"`
+}
+
 // Config holds the configuration for the agent.
 type Config struct {
-	ServerAddress string `mapstructure:"server_address"`
-	APIKey        string `mapstructure:"api_key"`
-	// Add additional fields as necessary.
+	ServerAddress string       `mapstructure:"server_address"`
+	APIKey        string       `mapstructure:"api_key"`
+	RemoteHosts   []RemoteHost `mapstructure:"remote_hosts"`
 }
 
 // LoadConfig reads configuration from file/environment variables.
