@@ -9,6 +9,10 @@ import (
 // Spy collects information about running processes.
 type Spy struct{}
 
+type Collector interface {
+	Collect() (interface{}, error)
+}
+
 // NewSpy returns a new Spy instance.
 func NewSpy() *Spy {
 	return &Spy{}
