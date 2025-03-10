@@ -114,7 +114,7 @@ jobs:
         run: |
           mkdir -p dist
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-          go build -ldflags "-X 'github.com/SailfinIO/agent/cmd/version.Version=${{ needs.semantic-release.outputs.release_tag }}'" \
+          go build -ldflags "-X 'github.com/SailfinIO/agent/pkg/version.Version=${{ needs.semantic-release.outputs.release_tag }}'" \
           -o dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }} .
 
       - name: Package CLI binary (Linux/macOS)
@@ -122,7 +122,7 @@ jobs:
         run: |
           mkdir -p package/bin package/config
           cp cmd/agent/dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }} package/bin/sailfin
-          cp sailfin.yaml.sample package/config/sailfin.yaml
+          cp pkl/AgentConfig.pkl.sample package/config/AgentConfig.pkl
           tar -czf sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C package .
 
       - name: List files

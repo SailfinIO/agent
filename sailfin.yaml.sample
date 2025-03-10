@@ -1,2 +1,9 @@
-server_address: http://localhost:8080
-api_key: 1234567890
+server_address: "localhost:8080"
+api_key: "default-key"
+remote_hosts:
+  - host: "192.168.1.100"
+    user: "admin"
+    password: "secret"
+  - host: "192.168.1.101"
+    user: "ubuntu"
+    private_key: "/path/to/key.pem"
