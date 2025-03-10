@@ -30,8 +30,7 @@ func newRemoteCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			// Save remote configuration.
-			// This could write to a local file or update a database.
+			// For now, simply print the remote host configuration.
 			fmt.Printf("Adding remote host %s for user %s\n", host, user)
 			if password != "" {
 				fmt.Println("Using password authentication.")
@@ -40,7 +39,8 @@ func newRemoteCmd() *cobra.Command {
 			} else {
 				fmt.Println("No authentication method provided.")
 			}
-			// TODO: implement saving the remote host configuration.
+
+			// TODO: Implement saving or updating the configuration file or database.
 		},
 	}
 	addCmd.Flags().String("host", "", "Hostname or IP address of the remote server")
@@ -54,14 +54,12 @@ func newRemoteCmd() *cobra.Command {
 		Short: "Install the agent on a remote server",
 		Run: func(cmd *cobra.Command, args []string) {
 			host, _ := cmd.Flags().GetString("host")
-			// Other flags as needed.
 			if host == "" {
 				fmt.Println("Remote host is required.")
 				os.Exit(1)
 			}
-
 			fmt.Printf("Installing agent on remote host %s...\n", host)
-			// TODO: Use SSH or your preferred remote management method to install/configure the agent.
+			// TODO: Use SSH or your preferred remote management method.
 		},
 	}
 	installCmd.Flags().String("host", "", "Hostname or IP address of the remote server")

@@ -25,10 +25,10 @@ func NewRootCmd() *cobra.Command {
 		Short: "Sailfin collects server metrics",
 	}
 
-	// Add agent commands.
+	// Add agent and remote commands.
 	rootCmd.AddCommand(newAgentCmd(cfg))
-	// Add remote commands.
 	rootCmd.AddCommand(newRemoteCmd())
-
+	// Add the new version command.
+	rootCmd.AddCommand(NewVersionCmd())
 	return rootCmd
 }
