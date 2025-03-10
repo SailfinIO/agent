@@ -120,8 +120,9 @@ jobs:
       - name: Package CLI binary (Linux/macOS)
         if: matrix.goos != 'windows'
         run: |
-          mkdir -p package/bin
+          mkdir -p package/bin package/config
           cp cmd/agent/dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }} package/bin/sailfin
+          cp sailfin.yaml.sample package/config/sailfin.yaml
           tar -czf sailfin-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz -C package .
 
       - name: List files
