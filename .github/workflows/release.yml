@@ -109,6 +109,25 @@ jobs:
       - name: Run tests
         run: go test ./...
 
+      - name: Bump version in version.go
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          # Extract the new version from semantic-release output
+          VERSION=${{ needs.semantic-release.outputs.release_tag }}
+          echo "Bumping version.go to version $VERSION"
+
+          # Update the version.go file. Adjust the sed command if you run on macOS vs Linux.
+          sed -i.bak "s/var Version = \"dev\"/var Version = \"$VERSION\"/" pkg/version/version.go
+
+          # Configure Git (you may want to use a bot account or similar)
+          git config user.email "release-bot@sailfin.io"
+          git config user.name "Release Bot"
+
+          # Commit the change. The [skip ci] flag prevents triggering another CI run.
+          git add pkg/version/version.go
+          git commit -m "Bump version to $VERSION [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
+
       - name: Build CLI binary
         working-directory: cmd/agent
         run: |

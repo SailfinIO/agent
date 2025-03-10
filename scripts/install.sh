@@ -38,13 +38,15 @@ case "$ARCH" in
 esac
 
 # --- Determine Asset Name and Version ---
-# Assume VERSION is provided as an env var (or read from a file)
-if [ -z "${VERSION:-}" ]; then
-  VERSION="dev"
+if [ -z "${VERSION:-}" ] || [ "$VERSION" = "latest" ]; then
+  log "VERSION is not set or is 'latest'. Querying GitHub for the latest release tag..."
+  VERSION=$(curl -s https://api.github.com/repos/SailfinIO/agent/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  if [ -z "$VERSION" ]; then
+    log "Error: Could not determine the latest release tag."
+    exit 1
+  fi
+  log "Latest release version found: ${VERSION}"
 fi
-ASSET="sailfin-${OS}-${ARCH}.tar.gz"
-URL="https://github.com/SailfinIO/agent/releases/download/v${VERSION}/${ASSET}"
-
 log "Detected OS: ${OS}"
 log "Detected architecture: ${ARCH}"
 log "Downloading asset: ${ASSET} (version ${VERSION}) from ${URL}"
