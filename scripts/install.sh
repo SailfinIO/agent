@@ -93,7 +93,7 @@ fi
 sudo ln -s "${TARGET_VERSION_DIR}/sailfin" "$GLOBAL_LINK"
 log "Global symlink updated: ${GLOBAL_LINK} -> ${TARGET_VERSION_DIR}/sailfin"
 
-# --- Create Configuration Directory (as before) ---
+# --- Create Configuration Directory ---
 CONFIG_DIR="$HOME/.sailfin"
 if [ ! -d "$CONFIG_DIR" ]; then
     log "Creating configuration directory at ${CONFIG_DIR}..."
@@ -107,9 +107,13 @@ if [ ! -f "$CONFIG_FILE" ]; then
     log "Installing default configuration to ${CONFIG_FILE}..."
     SAMPLE_URL="https://raw.githubusercontent.com/SailfinIO/agent/main/pkl/AgentConfig.pkl.sample"
     curl -sL "$SAMPLE_URL" -o "$CONFIG_FILE"
+    # Update the default host user to the current home directory user.
+    CURRENT_USER=$(whoami)
+    sed -i "s/your_username/${CURRENT_USER}/g" "$CONFIG_FILE"
 else
     log "Configuration file already exists at ${CONFIG_FILE}. Skipping default installation."
 fi
+
 
 # --- Cleanup ---
 log "Cleaning up downloaded asset..."

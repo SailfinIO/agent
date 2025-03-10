@@ -1,4 +1,3 @@
-// pkg/config/config.go
 package config
 
 import (
@@ -9,22 +8,39 @@ import (
 	"github.com/SailfinIO/agent/gen/agentconfig"
 )
 
-// You can alias the generated types so that other parts of your project can use them.
 type Config = agentconfig.AgentConfig
 type RemoteHost = agentconfig.RemoteHost
 
-// SaveConfig saves configuration to a Pkl file.
+func getConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".sailfin", "AgentConfig.pkl"), nil
+}
+
+// SaveConfig saves configuration to a Pkl file in the user's ~/.sailfin directory.
 func SaveConfig(cfg *Config) error {
-	target := filepath.Join("pkl", "AgentConfig.pkl")
+	target, err := getConfigPath()
+	if err != nil {
+		return err
+	}
 	data, err := agentconfig.Marshal(cfg)
 	if err != nil {
+		return err
+	}
+	// Ensure the directory exists.
+	if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 		return err
 	}
 	return os.WriteFile(target, data, 0644)
 }
 
-// LoadConfig loads configuration from a Pkl file.
+// LoadConfig loads configuration from a Pkl file in the user's ~/.sailfin directory.
 func LoadConfig() (*Config, error) {
-	// You might want to allow the config file path to be dynamic; for now, we hard-code it.
-	return agentconfig.LoadFromPath(context.Background(), "pkl/AgentConfig.pkl")
+	target, err := getConfigPath()
+	if err != nil {
+		return nil, err
+	}
+	return agentconfig.LoadFromPath(context.Background(), target)
 }
