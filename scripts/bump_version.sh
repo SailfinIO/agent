@@ -30,11 +30,18 @@ fi
 echo "New version: $NEW_VERSION"
 echo "Branch to update: $BRANCH"
 
-# Ensure we are working on the target branch.
-git checkout "$BRANCH"
+# Ensure the latest remote branches are fetched.
+git fetch origin
+
+# Check if the branch exists locally. If not, create it from the remote.
+if git rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
+  git checkout "$BRANCH"
+else
+  git checkout -B "$BRANCH" "origin/$BRANCH"
+fi
 
 # Update version.go in place without creating a backup.
-sed -i "s/var Version = \"0.0.1-alpha.1\"/var Version = \"$NEW_VERSION\"/" pkg/version/version.go
+sed -i "s/var Version = \"dev\"/var Version = \"$NEW_VERSION\"/" pkg/version/version.go
 
 # Configure Git for committing.
 git config user.email "release-bot@sailfin.io"
