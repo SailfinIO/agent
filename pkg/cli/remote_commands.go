@@ -192,6 +192,54 @@ func newRemoteCmd() *cobra.Command {
 		},
 	}
 
+	// "delete" command to remove a remote host.
+	deleteCmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete a remote host configuration",
+		Run: func(cmd *cobra.Command, args []string) {
+			host, _ := cmd.Flags().GetString("host")
+			user, _ := cmd.Flags().GetString("user")
+
+			if host == "" || user == "" {
+				fmt.Println("Host and user are required to identify the remote host to delete.")
+				os.Exit(1)
+			}
+
+			cfg, err := config.LoadConfig()
+			if err != nil {
+				fmt.Printf("Error loading configuration: %v\n", err)
+				os.Exit(1)
+			}
+
+			// Filter out the remote host to be deleted.
+			newRemotes := []*agentconfig.RemoteHost{}
+			deleted := false
+			for _, r := range cfg.RemoteHosts {
+				if r.Host == host && r.User == user {
+					deleted = true
+					continue
+				}
+				newRemotes = append(newRemotes, r)
+			}
+
+			if !deleted {
+				fmt.Println("Remote host not found in configuration.")
+				os.Exit(1)
+			}
+
+			cfg.RemoteHosts = newRemotes
+
+			if err := saveConfig(cfg); err != nil {
+				fmt.Printf("Error saving updated configuration: %v\n", err)
+				os.Exit(1)
+			}
+
+			fmt.Printf("Remote host %s for user %s deleted successfully.\n", host, user)
+		},
+	}
+	deleteCmd.Flags().String("host", "", "Hostname or IP address of the remote server to delete")
+	deleteCmd.Flags().String("user", "", "Username for remote authentication of the host to delete")
+
 	// "install" command to install the agent on a remote server.
 	installCmd := &cobra.Command{
 		Use:   "install",
