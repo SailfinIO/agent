@@ -37,6 +37,7 @@ func NewAgent(cfg *config.Config) (*Agent, error) {
 		collector.NewMemoryCollector(),
 		collector.NewSpy(),
 		collector.NewCPUCollector(),
+		collector.NewSystemStatsCollector(),
 	}
 
 	// Create an HTTP mux that will serve the /metrics endpoint.
@@ -111,6 +112,12 @@ func aggregateMetrics(collectors []Collector) (map[string]interface{}, error) {
 				return nil, err
 			}
 			aggregated["cpu"] = data
+		case *collector.SystemStatsCollector:
+			data, err := v.Collect()
+			if err != nil {
+				return nil, err
+			}
+			aggregated["system"] = data
 		default:
 			aggregated["unknown"] = "collector type not recognized"
 		}
