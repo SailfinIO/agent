@@ -1,40 +1,30 @@
-// pkg/confing/config.go
-
+// pkg/config/config.go
 package config
 
 import (
-	"fmt"
+	"context"
+	"os"
+	"path/filepath"
 
-	"github.com/spf13/viper"
+	"github.com/SailfinIO/agent/gen/agentconfig"
 )
 
-// Config holds the configuration for the agent.
-type Config struct {
-	ServerAddress string `mapstructure:"server_address"`
-	APIKey        string `mapstructure:"api_key"`
-	// Add additional fields as necessary.
+// You can alias the generated types so that other parts of your project can use them.
+type Config = agentconfig.AgentConfig
+type RemoteHost = agentconfig.RemoteHost
+
+// SaveConfig saves configuration to a Pkl file.
+func SaveConfig(cfg *Config) error {
+	target := filepath.Join("pkl", "AgentConfig.pkl")
+	data, err := agentconfig.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(target, data, 0644)
 }
 
-// LoadConfig reads configuration from file/environment variables.
+// LoadConfig loads configuration from a Pkl file.
 func LoadConfig() (*Config, error) {
-	viper.SetConfigName("sailfin")  // Name of config file (without extension)
-	viper.SetConfigType("yaml")     // Config file format
-	viper.AddConfigPath(".")        // Look in the current directory
-	viper.AddConfigPath("./config") // Look for config in the config directory
-	viper.AddConfigPath("$HOME")    // Look in the home directory
-
-	// Set defaults
-	viper.SetDefault("server_address", "localhost:8080")
-	viper.SetDefault("api_key", "default-key")
-
-	// Read configuration.
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error reading config file: %w", err)
-	}
-
-	var cfg Config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, fmt.Errorf("unable to decode config into struct: %w", err)
-	}
-	return &cfg, nil
+	// You might want to allow the config file path to be dynamic; for now, we hard-code it.
+	return agentconfig.LoadFromPath(context.Background(), "pkl/AgentConfig.pkl")
 }

@@ -1,0 +1,22 @@
+// pkl/AgentConfig.pkl
+@go.Package { name = "github.com/SailfinIO/agent/gen/agentconfig" }
+
+module SailfinIO.agent.AgentConfig
+
+import "package://pkg.pkl-lang.org/pkl-go/pkl.golang@0.9.0#/go.pkl" 
+
+/// The address the agent listens on.
+serverAddress: String
+
+/// API key for authenticating agent operations.
+apiKey: String
+
+/// Configuration for remote hosts.
+remoteHosts: List<RemoteHost>
+
+class RemoteHost {
+  host: String
+  user: String
+  password: String?  
+  privateKey: String?
+}
