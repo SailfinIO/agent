@@ -25,15 +25,31 @@ type Collector interface {
 type Agent struct {
 	cfg        *config.Config
 	httpServer *server.HTTPServer
-	collectors []Collector
+	collectors []collector.Collector // Use collector.Collector from the collector package.
 	storage    storage.Storage
 	logger     utils.Logger
 }
 
 // NewAgent creates a new Agent instance.
 func NewAgent(cfg *config.Config) (*Agent, error) {
-	// Initialize collectors, including memory, process spy, and CPU.
-	collectors := []Collector{
+	// If the API key is still the placeholder, generate a new one.
+	if cfg.ApiKey == "" || cfg.ApiKey == "default-key" {
+		newKey, err := generateAPIKey()
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate API key: %v", err)
+		}
+		cfg.ApiKey = newKey
+		// Save the updated configuration.
+		if err := config.SaveConfig(cfg); err != nil {
+			// Log a warning if saving fails, but you might still want to continue.
+			fmt.Printf("Warning: failed to save updated API key to configuration: %v\n", err)
+		} else {
+			fmt.Printf("Generated new API key and updated configuration.\n")
+		}
+	}
+
+	// Initialize collectors.
+	collectors := []collector.Collector{
 		collector.NewMemoryCollector(),
 		collector.NewSpy(),
 		collector.NewCPUCollector(),
@@ -90,9 +106,10 @@ func (a *Agent) CollectMetrics() ([]byte, error) {
 }
 
 // aggregateMetrics collects metrics from all collectors and returns the data as a map.
-func aggregateMetrics(collectors []Collector) (map[string]interface{}, error) {
+func aggregateMetrics(collectors []collector.Collector) (map[string]interface{}, error) {
 	aggregated := make(map[string]interface{})
 	for _, c := range collectors {
+		// Use type assertions as needed.
 		switch v := c.(type) {
 		case *collector.MemoryCollector:
 			data, err := v.Collect()
