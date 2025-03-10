@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 
 	"github.com/SailfinIO/agent/gen/agentconfig"
@@ -34,11 +35,12 @@ func newRemoteCmd() *cobra.Command {
 		Short: "Add a remote server",
 		Run: func(cmd *cobra.Command, args []string) {
 			host, _ := cmd.Flags().GetString("host")
-			user, _ := cmd.Flags().GetString("user")
+			userFlag, _ := cmd.Flags().GetString("user")
 			password, _ := cmd.Flags().GetString("password")
 			privateKey, _ := cmd.Flags().GetString("private-key")
 
-			if host == "" || user == "" {
+			// If no host is provided, require that the user be explicit.
+			if host == "" || userFlag == "" {
 				fmt.Println("Host and user are required.")
 				os.Exit(1)
 			}
@@ -60,7 +62,7 @@ func newRemoteCmd() *cobra.Command {
 
 			// Check if remote host already exists.
 			for _, r := range cfg.RemoteHosts {
-				if r.Host == host && r.User == user {
+				if r.Host == host && r.User == userFlag {
 					fmt.Println("Remote host already exists in configuration.")
 					os.Exit(1)
 				}
@@ -69,7 +71,7 @@ func newRemoteCmd() *cobra.Command {
 			// Create a new RemoteHost.
 			newRemote := &agentconfig.RemoteHost{
 				Host:       host,
-				User:       user,
+				User:       userFlag,
 				Password:   nil,
 				PrivateKey: nil,
 			}
@@ -93,7 +95,7 @@ func newRemoteCmd() *cobra.Command {
 			if privateKey != "" {
 				authType = "private key"
 			}
-			fmt.Printf("Remote host %s for user %s added successfully using %s authentication.\n", host, user, authType)
+			fmt.Printf("Remote host %s for user %s added successfully using %s authentication.\n", host, userFlag, authType)
 		},
 	}
 	addCmd.Flags().String("host", "", "Hostname or IP address of the remote server")
@@ -107,11 +109,11 @@ func newRemoteCmd() *cobra.Command {
 		Short: "Update an existing remote host configuration",
 		Run: func(cmd *cobra.Command, args []string) {
 			host, _ := cmd.Flags().GetString("host")
-			user, _ := cmd.Flags().GetString("user")
+			userFlag, _ := cmd.Flags().GetString("user")
 			password, _ := cmd.Flags().GetString("password")
 			privateKey, _ := cmd.Flags().GetString("private-key")
 
-			if host == "" || user == "" {
+			if host == "" || userFlag == "" {
 				fmt.Println("Host and user are required to identify the remote host to update.")
 				os.Exit(1)
 			}
@@ -132,7 +134,7 @@ func newRemoteCmd() *cobra.Command {
 
 			updated := false
 			for _, r := range cfg.RemoteHosts {
-				if r.Host == host && r.User == user {
+				if r.Host == host && r.User == userFlag {
 					if password != "" {
 						r.Password = &password
 						r.PrivateKey = nil
@@ -159,7 +161,7 @@ func newRemoteCmd() *cobra.Command {
 			if privateKey != "" {
 				authType = "private key"
 			}
-			fmt.Printf("Remote host %s for user %s updated successfully to use %s authentication.\n", host, user, authType)
+			fmt.Printf("Remote host %s for user %s updated successfully to use %s authentication.\n", host, userFlag, authType)
 		},
 	}
 	setCmd.Flags().String("host", "", "Hostname or IP address of the remote server to update")
@@ -198,9 +200,9 @@ func newRemoteCmd() *cobra.Command {
 		Short: "Delete a remote host configuration",
 		Run: func(cmd *cobra.Command, args []string) {
 			host, _ := cmd.Flags().GetString("host")
-			user, _ := cmd.Flags().GetString("user")
+			userFlag, _ := cmd.Flags().GetString("user")
 
-			if host == "" || user == "" {
+			if host == "" || userFlag == "" {
 				fmt.Println("Host and user are required to identify the remote host to delete.")
 				os.Exit(1)
 			}
@@ -215,7 +217,7 @@ func newRemoteCmd() *cobra.Command {
 			newRemotes := []*agentconfig.RemoteHost{}
 			deleted := false
 			for _, r := range cfg.RemoteHosts {
-				if r.Host == host && r.User == user {
+				if r.Host == host && r.User == userFlag {
 					deleted = true
 					continue
 				}
@@ -234,11 +236,60 @@ func newRemoteCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			fmt.Printf("Remote host %s for user %s deleted successfully.\n", host, user)
+			fmt.Printf("Remote host %s for user %s deleted successfully.\n", host, userFlag)
 		},
 	}
 	deleteCmd.Flags().String("host", "", "Hostname or IP address of the remote server to delete")
 	deleteCmd.Flags().String("user", "", "Username for remote authentication of the host to delete")
+
+	// "local" command to add the local machine as a remote host by default.
+	localCmd := &cobra.Command{
+		Use:   "local",
+		Short: "Add local machine as a remote host (defaults to 'localhost' and current OS user)",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Get current OS user.
+			currentUser, err := user.Current()
+			if err != nil {
+				fmt.Printf("Error fetching current user: %v\n", err)
+				os.Exit(1)
+			}
+			host := "localhost"
+			username := currentUser.Username
+
+			// Load current configuration.
+			cfg, err := config.LoadConfig()
+			if err != nil {
+				fmt.Printf("Error loading configuration: %v\n", err)
+				os.Exit(1)
+			}
+
+			// Check if local host already exists.
+			for _, r := range cfg.RemoteHosts {
+				if r.Host == host && r.User == username {
+					fmt.Println("Local host is already configured.")
+					return
+				}
+			}
+
+			// Create a new RemoteHost entry for the local machine.
+			localRemote := &agentconfig.RemoteHost{
+				Host:       host,
+				User:       username,
+				Password:   nil,
+				PrivateKey: nil,
+			}
+			// (Optionally, you could decide on an authentication method if needed.)
+
+			cfg.RemoteHosts = append(cfg.RemoteHosts, localRemote)
+
+			if err := saveConfig(cfg); err != nil {
+				fmt.Printf("Error saving updated configuration: %v\n", err)
+				os.Exit(1)
+			}
+
+			fmt.Printf("Local host (%s@%s) added successfully.\n", username, host)
+		},
+	}
 
 	// "install" command to install the agent on a remote server.
 	installCmd := &cobra.Command{
@@ -246,10 +297,10 @@ func newRemoteCmd() *cobra.Command {
 		Short: "Install the agent on a remote server",
 		Run: func(cmd *cobra.Command, args []string) {
 			host, _ := cmd.Flags().GetString("host")
-			user, _ := cmd.Flags().GetString("user")
+			userFlag, _ := cmd.Flags().GetString("user")
 			privateKey, _ := cmd.Flags().GetString("private-key")
 
-			if host == "" || user == "" {
+			if host == "" || userFlag == "" {
 				fmt.Println("Remote host and user are required.")
 				os.Exit(1)
 			}
@@ -258,12 +309,12 @@ func newRemoteCmd() *cobra.Command {
 			if privateKey != "" {
 				sshArgs = append(sshArgs, "-i", privateKey)
 			}
-			target := fmt.Sprintf("%s@%s", user, host)
+			target := fmt.Sprintf("%s@%s", userFlag, host)
 			sshArgs = append(sshArgs, target)
 			remoteCmdStr := "bash -c 'curl -sL https://raw.githubusercontent.com/SailfinIO/agent/main/scripts/install.sh | bash'"
 			sshArgs = append(sshArgs, remoteCmdStr)
 
-			fmt.Printf("Installing agent on remote host %s as user %s...\n", host, user)
+			fmt.Printf("Installing agent on remote host %s as user %s...\n", host, userFlag)
 			out, err := exec.Command("ssh", sshArgs...).CombinedOutput()
 			if err != nil {
 				fmt.Printf("Error installing agent: %v\nOutput: %s\n", err, string(out))
@@ -276,6 +327,6 @@ func newRemoteCmd() *cobra.Command {
 	installCmd.Flags().String("user", "", "Username for remote SSH authentication")
 	installCmd.Flags().String("private-key", "", "Path to the SSH private key for authentication")
 
-	remoteCmd.AddCommand(addCmd, setCmd, listCmd, installCmd)
+	remoteCmd.AddCommand(addCmd, setCmd, listCmd, deleteCmd, localCmd, installCmd)
 	return remoteCmd
 }
