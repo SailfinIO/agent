@@ -124,12 +124,6 @@ jobs:
 
       - name: Install pkl CLI
         run: |
-          curl -L -o pkl-cli https://github.com/apple/pkl-go/releases/download/v0.9.0/pkl-linux-amd64.bin
-          chmod +x pkl-cli
-          sudo mv pkl-cli /usr/local/bin/pkl
-
-      - name: Install pkl CLI
-        run: |
           sudo rm -f /usr/local/bin/pkl || true
           curl -L -o pkl-cli https://github.com/apple/pkl-go/releases/download/v0.9.0/pkl-linux-amd64.bin
           chmod +x pkl-cli
