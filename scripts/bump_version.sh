@@ -69,8 +69,19 @@ git config user.name "Release Bot"
 # Commit the change.
 git commit -m "Bump version to $NEW_VERSION [skip ci]"
 
-# Push the commit with a safe force option.
-git push --force-with-lease origin "$BRANCH"
+# Attempt to push the commit with a safe force option using a retry loop.
+MAX_ATTEMPTS=5
+attempt=1
+while ! git push --force-with-lease origin "$BRANCH"; do
+  if [ "$attempt" -ge "$MAX_ATTEMPTS" ]; then
+    echo "Failed to push after $attempt attempts."
+    exit 1
+  fi
+  echo "Remote branch updated. Fetching and rebasing (attempt $attempt/$MAX_ATTEMPTS)..."
+  git fetch origin
+  git rebase origin/"$BRANCH"
+  attempt=$((attempt+1))
+done
 
 # ... after pushing, restore stashed changes if any.
 if [ "${STASHED:-false}" = true ]; then
