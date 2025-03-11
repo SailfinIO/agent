@@ -3,6 +3,9 @@ amends "./AgentConfig.schema.pkl"
 
 serverAddress = "localhost:8080"
 apiKey = "default-key"
-remoteHosts = (
-  RemoteHost.apply("localhost", "your_username")
+remoteHosts = List(
+  (RemoteHost) {
+    host = "localhost"
+    user = "default-user"
+  }
 )
