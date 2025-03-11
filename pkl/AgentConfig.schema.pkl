@@ -1,4 +1,4 @@
-// pkl/AgentConfig.pkl
+// pkl/AgentConfig.schema.pkl
 @go.Package { name = "github.com/SailfinIO/agent/gen/agentconfig" }
 
 module SailfinIO.agent.AgentConfig
