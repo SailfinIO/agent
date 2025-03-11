@@ -4,5 +4,5 @@ amends "./AgentConfig.schema.pkl"
 serverAddress = "localhost:8080"
 apiKey = "default-key"
 remoteHosts = (
-  RemoteHost("localhost", "your_username")
+  RemoteHost.apply("localhost", "your_username")
 )
