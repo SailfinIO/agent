@@ -1,3 +1,5 @@
+// pkg/collector/cpu.go
+
 package collector
 
 import (

@@ -1,3 +1,5 @@
+// pkg/collector/memory.go
+
 package collector
 
 import (

@@ -1,3 +1,5 @@
+// pkg/collector/spy.go
+
 package collector
 
 import (

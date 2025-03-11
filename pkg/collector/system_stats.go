@@ -45,7 +45,17 @@ func (s *SystemStatsCollector) Collect() (interface{}, error) {
 	// Get swap usage.
 	swapStat, err := mem.SwapMemory()
 	if err != nil {
-		return nil, err
+		// Handle unimplemented swap memory on certain OSes (e.g., macOS).
+		if runtime.GOOS == "darwin" || err.Error() == "not implemented yet" {
+			swapStat = &mem.SwapMemoryStat{
+				Total:       0,
+				Free:        0,
+				Used:        0,
+				UsedPercent: 0,
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	// Get disk usage for root (you might iterate over all partitions as needed).

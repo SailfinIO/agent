@@ -1,3 +1,5 @@
+// cmd/agent/main.go
+
 package main
 
 import (
