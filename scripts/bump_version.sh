@@ -40,6 +40,13 @@ else
   git checkout -B "$BRANCH" "origin/$BRANCH"
 fi
 
+# Stash any unstaged changes if present.
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Working directory is not clean. Stashing changes..."
+  git stash push --include-untracked -m "Auto-stash before bump version"
+  STASHED=true
+fi
+
 # Rebase the branch onto the latest remote changes.
 git pull --rebase origin "$BRANCH"
 
@@ -64,3 +71,9 @@ git commit -m "Bump version to $NEW_VERSION [skip ci]"
 
 # Push the commit.
 git push origin "$BRANCH"
+
+# ... after pushing, restore stashed changes if any.
+if [ "${STASHED:-false}" = true ]; then
+  echo "Restoring stashed changes..."
+  git stash pop || echo "Warning: There were conflicts when restoring stashed changes."
+fi

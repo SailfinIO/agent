@@ -73,6 +73,5 @@
     ]
   ],
   "preset": "conventionalcommits",
-  "npmPublish": false,
-  "initialVersion": "0.0.1"
+  "npmPublish": false
 }
