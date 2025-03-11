@@ -69,8 +69,8 @@ git config user.name "Release Bot"
 # Commit the change.
 git commit -m "Bump version to $NEW_VERSION [skip ci]"
 
-# Push the commit.
-git push origin "$BRANCH"
+# Push the commit with a safe force option.
+git push --force-with-lease origin "$BRANCH"
 
 # ... after pushing, restore stashed changes if any.
 if [ "${STASHED:-false}" = true ]; then
