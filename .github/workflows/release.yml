@@ -128,10 +128,12 @@ jobs:
           chmod +x pkl-cli
           sudo mv pkl-cli /usr/local/bin/pkl
 
-      - name: Generate Pkl Go code
+      - name: Install pkl CLI
         run: |
-          go install github.com/apple/pkl-go/cmd/pkl-gen-go@v0.9.0
-          pkl-gen-go pkl/AgentConfig.schema.pkl --base-path github.com/SailfinIO/agent/gen/agentconfig
+          sudo rm -f /usr/local/bin/pkl || true
+          curl -L -o pkl-cli https://github.com/apple/pkl-go/releases/download/v0.9.0/pkl-linux-amd64.bin
+          chmod +x pkl-cli
+          sudo mv pkl-cli /usr/local/bin/pkl
 
       - name: Package CLI binary (Linux/macOS)
         if: matrix.goos != 'windows'
