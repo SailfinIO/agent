@@ -40,6 +40,9 @@ else
   git checkout -B "$BRANCH" "origin/$BRANCH"
 fi
 
+# Rebase the branch onto the latest remote changes.
+git pull --rebase origin "$BRANCH"
+
 # Update pkg/version/version.go in place.
 sed -i "s/var Version = \".*\"/var Version = \"$NEW_VERSION\"/" pkg/version/version.go
 
