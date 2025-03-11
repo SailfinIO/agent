@@ -102,6 +102,7 @@ else
     log "Configuration directory already exists at ${CONFIG_DIR}."
 fi
 
+# Install the sample configuration file if it doesn't exist.
 CONFIG_FILE="${CONFIG_DIR}/AgentConfig.pkl"
 if [ ! -f "$CONFIG_FILE" ]; then
     log "Installing default configuration to ${CONFIG_FILE}..."
@@ -112,6 +113,16 @@ if [ ! -f "$CONFIG_FILE" ]; then
     sed -i "s/your_username/${CURRENT_USER}/g" "$CONFIG_FILE"
 else
     log "Configuration file already exists at ${CONFIG_FILE}. Skipping default installation."
+fi
+
+# --- Install the Schema File ---
+SCHEMA_FILE="${CONFIG_DIR}/AgentConfig.schema.pkl"
+if [ ! -f "$SCHEMA_FILE" ]; then
+    log "Installing default schema to ${SCHEMA_FILE}..."
+    SCHEMA_URL="https://raw.githubusercontent.com/SailfinIO/agent/main/pkl/AgentConfig.schema.pkl"
+    curl -sL "$SCHEMA_URL" -o "$SCHEMA_FILE"
+else
+    log "Schema file already exists at ${SCHEMA_FILE}. Skipping default installation."
 fi
 
 
