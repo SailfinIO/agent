@@ -124,9 +124,9 @@ jobs:
 
       - name: Install pkl CLI
         run: |
-          curl -L -o pkl https://github.com/apple/pkl-go/releases/download/v0.9.0/pkl-linux-amd64.bin
-          chmod +x pkl
-          sudo mv pkl /usr/local/bin/
+          curl -L -o pkl-cli https://github.com/apple/pkl-go/releases/download/v0.9.0/pkl-linux-amd64.bin
+          chmod +x pkl-cli
+          sudo mv pkl-cli /usr/local/bin/pkl
 
       - name: Generate Pkl Go code
         run: |
