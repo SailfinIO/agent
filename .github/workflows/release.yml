@@ -122,6 +122,12 @@ jobs:
           go build -ldflags "-X 'github.com/SailfinIO/agent/pkg/version.Version=${{ needs.semantic-release.outputs.release_tag }}'" \
           -o dist/sailfin-${{ matrix.goos }}-${{ matrix.goarch }} .
 
+      - name: Install pkl CLI
+        run: |
+          curl -L -o pkl https://github.com/apple/pkl-go/releases/download/v0.9.0/pkl-linux-amd64.bin
+          chmod +x pkl
+          sudo mv pkl /usr/local/bin/
+
       - name: Generate Pkl Go code
         run: |
           go install github.com/apple/pkl-go/cmd/pkl-gen-go@v0.9.0
